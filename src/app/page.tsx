@@ -7,11 +7,12 @@ import { Header } from "@/components/header";
 import { TaskForm } from "@/components/task-form";
 import { TaskItem } from "@/components/task-item";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, ListFilter, Loader2 } from "lucide-react";
+import { PlusCircle, ListFilter, Loader2, ListChecks } from "lucide-react";
 import { prioritizeTasks, type PrioritizeTasksInput, type Task as AITask } from "@/ai/flows/prioritize-tasks";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { format } from "date-fns";
 
 export default function HomePage() {
   const { tasks, setTasks, addTask, updateTask, deleteTask, toggleComplete, isInitialized } = useLocalStorage();
