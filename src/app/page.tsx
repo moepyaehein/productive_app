@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -12,6 +13,7 @@ import { prioritizeTasks, type PrioritizeTasksInput, type Task as AITask } from 
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 
 export default function HomePage() {
@@ -50,6 +52,10 @@ export default function HomePage() {
     });
   }, [tasks]);
 
+  const completedTasksCount = useMemo(() => tasks.filter(task => task.completed).length, [tasks]);
+  const totalTasksCount = tasks.length;
+  const progressPercentage = totalTasksCount > 0 ? (completedTasksCount / totalTasksCount) * 100 : 0;
+
   const handlePrioritizeTasks = async () => {
     if (tasks.length === 0) {
       toast({
@@ -62,14 +68,13 @@ export default function HomePage() {
 
     setIsPrioritizing(true);
     try {
-      // Map tasks to the format expected by the AI flow
       const aiTasksInput: AITask[] = tasks
-        .filter(task => !task.completed) // Only prioritize non-completed tasks
+        .filter(task => !task.completed)
         .map(task => ({
           id: task.id,
           title: task.title,
-          dueDate: task.dueDate || format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"), // Default due date 1 week from now if not set
-          estimatedCompletionTime: task.estimatedCompletionTime || "1", // Default 1 hour if not set
+          dueDate: task.dueDate || format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"),
+          estimatedCompletionTime: task.estimatedCompletionTime || "1",
       }));
 
       if (aiTasksInput.length === 0) {
@@ -80,19 +85,16 @@ export default function HomePage() {
 
       const prioritizedAITasks = await prioritizeTasks({ tasks: aiTasksInput } as PrioritizeTasksInput);
       
-      // Create a map for quick lookup of AI-assigned priorities
       const priorityMap = new Map<string, number>();
       prioritizedAITasks.forEach((aiTask, index) => {
-        priorityMap.set(aiTask.id, index + 1); // Lower index = higher priority
+        priorityMap.set(aiTask.id, index + 1);
       });
 
-      // Update tasks with new priorities
       const updatedTasks = tasks.map(task => {
         const newPriority = priorityMap.get(task.id);
         if (newPriority !== undefined) {
           return { ...task, priority: newPriority, updatedAt: Date.now() };
         }
-        // For completed tasks or tasks not returned by AI, keep existing priority or assign a low one
         return { ...task, priority: task.completed ? Infinity : (task.priority || Infinity) };
       });
       
@@ -148,6 +150,16 @@ export default function HomePage() {
             </Button>
           </div>
         </div>
+
+        {totalTasksCount > 0 && (
+          <div className="mb-6">
+            <div className="flex justify-between mb-1">
+              <span className="text-sm font-medium text-muted-foreground">Overall Progress</span>
+              <span className="text-sm font-medium text-primary">{`${Math.round(progressPercentage)}%`}</span>
+            </div>
+            <Progress value={progressPercentage} className="w-full" aria-label={`Task completion progress: ${Math.round(progressPercentage)}%`} />
+          </div>
+        )}
 
         {sortedTasks.length === 0 ? (
           <Alert>
