@@ -8,13 +8,16 @@ import { Header } from "@/components/header";
 import { TaskForm } from "@/components/task-form";
 import { TaskItem } from "@/components/task-item";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, ListFilter, Loader2, ListChecks } from "lucide-react";
+import { PlusCircle, ListFilter, Loader2, ListChecks, User } from "lucide-react";
 import { prioritizeTasks, type PrioritizeTasksInput, type Task as AITask } from "@/ai/flows/prioritize-tasks";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+const SETTINGS_STORAGE_KEY = 'dailyflow-settings';
 
 export default function HomePage() {
   const { tasks, setTasks, addTask, updateTask, deleteTask, toggleComplete, isInitialized } = useLocalStorage();
@@ -22,6 +25,27 @@ export default function HomePage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isPrioritizing, setIsPrioritizing] = useState(false);
   const { toast } = useToast();
+  const [userName, setUserName] = useState<string>("");
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string>("");
+
+  useEffect(() => {
+    // Load user settings from local storage on client mount
+    if (typeof window !== 'undefined') {
+      const storedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (storedSettings) {
+        try {
+          const parsedSettings = JSON.parse(storedSettings);
+          setUserName(parsedSettings.userName || "User");
+          setProfilePictureUrl(parsedSettings.profilePictureUrl || "");
+        } catch (e) {
+          console.error("Failed to parse settings from local storage", e);
+          setUserName("User"); // Default in case of error
+        }
+      } else {
+        setUserName("User"); // Default if no settings found
+      }
+    }
+  }, []);
 
   const handleOpenForm = (task?: Task) => {
     setEditingTask(task || null);
@@ -123,6 +147,7 @@ export default function HomePage() {
         <Header />
         <main className="container mx-auto max-w-3xl px-4 py-8">
           <div className="space-y-4">
+            <Skeleton className="h-12 w-64 mb-4" /> {/* Skeleton for profile area */}
             <Skeleton className="h-10 w-40" />
             <Skeleton className="h-10 w-48" />
             <Skeleton className="h-32 w-full" />
@@ -138,6 +163,24 @@ export default function HomePage() {
     <>
       <Header />
       <main className="container mx-auto max-w-3xl px-4 py-8">
+        {/* Profile Display Section */}
+        {userName && (
+            <div className="mb-8 flex items-center gap-4 p-4 bg-card rounded-lg shadow">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={profilePictureUrl} alt={userName} />
+                <AvatarFallback>
+                  {userName && userName !== "User" ? userName.substring(0, 2).toUpperCase() : <User className="h-8 w-8" />}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-2xl font-semibold font-headline">
+                  Welcome back, {userName === "User" ? "there" : userName}!
+                </p>
+                <p className="text-sm text-muted-foreground">Ready to organize your day?</p>
+              </div>
+            </div>
+          )}
+
         <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h2 className="text-2xl font-semibold font-headline">Your Tasks</h2>
           <div className="flex gap-2">
