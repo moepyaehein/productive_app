@@ -82,14 +82,14 @@ export default function CalendarPage() {
               selected={selectedDate}
               onSelect={setSelectedDate}
               className="w-full"
-              modifiers={{ highlighted: daysWithTasks }}
-              modifiersStyles={{
-                highlighted: { 
-                  border: "2px solid hsl(var(--primary))",
-                  borderRadius: 'var(--radius)',
-                },
-              }}
-              disabled={(date) => date < new Date("1900-01-01")}
+            //  modifiers={{ highlighted: daysWithTasks }}
+            //  modifiersStyles={{
+             //   highlighted: { 
+              //    border: "2px solid hsl(var(--primary))",
+              //    borderRadius: 'var(--radius)',
+              //  },
+             // }}
+            //  disabled={(date) => date < new Date("1900-01-01")}
             />
           </div>
           <div className="space-y-4">
